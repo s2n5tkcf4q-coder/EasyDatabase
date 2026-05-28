@@ -138,6 +138,35 @@ python app.py
 ## 扩展开发
 
 - **新增 SQL 模板**：在 `text_to_sql.py` 的 `SQL_TEMPLATES` 中添加模式，并更新提示词和填充逻辑。
+
+```python
+SQL_TEMPLATES = {
+    "aggregate": """
+SELECT {select_columns}
+FROM {tables}
+WHERE {where_clauses}
+GROUP BY {group_by}
+ORDER BY {order_by}
+LIMIT {limit}
+""",
+    "trend": """
+SELECT {time_column}, {select_columns}
+FROM {tables}
+WHERE {time_filter} AND {where_clauses}
+GROUP BY {time_column}, {group_by}
+ORDER BY {time_column} ASC
+LIMIT {limit}
+""",
+    "detail": """
+SELECT {select_columns}
+FROM {tables}
+WHERE {where_clauses}
+ORDER BY {order_by}
+LIMIT {limit}
+"""
+}
+```
+
 - **集成其他 LLM**：在 `llm_client.py` 中继承 `BaseLLMBackend` 实现新后端。
 - **增加分析工具**：在 `task_planner.py` 中注册新工具，并在 `chat.py` 的执行循环中添加分支。
 - **自定义记忆**：修改 `memory_manager.py` 添加记忆类型，或通过管理页面手动插入。
