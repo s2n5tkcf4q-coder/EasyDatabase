@@ -150,12 +150,3 @@ A：增大 `llm_client.py` 中 Ollama 的超时时间，或使用更轻量的模
 
 **Q：如何修改系统提示词？**  
 A：在“系统设置”中直接编辑“系统提示词”文本框并保存。
-
----
-
-## 许可证
-本项目采用 MIT License，欢迎贡献代码与反馈建议。
-
----
-
-**Enjoy your data journey with DataAgent!**
