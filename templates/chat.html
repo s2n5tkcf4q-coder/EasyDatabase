@@ -1,0 +1,257 @@
+<!-- templates/chat.html -->
+{% extends "base.html" %}
+
+{% block title %}问答 - 企业数据分析智能体{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* 聊天页面专用样式补充 */
+    .chat-wrapper {
+        display: flex;
+        height: calc(100vh - 56px);
+        margin: 0;
+    }
+    .chat-sidebar {
+        width: 300px;
+        background: #fff;
+        border-right: 1px solid #e9ecef;
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+        transition: width 0.3s;
+    }
+    .chat-sidebar-header {
+        padding: 1rem;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .chat-history-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0.5rem;
+    }
+    .chat-history-item {
+        padding: 10px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        margin-bottom: 4px;
+        transition: background 0.2s;
+        border: 1px solid transparent;
+        position: relative;
+    }
+    .chat-history-item:hover {
+        background: #f0f2f5;
+    }
+    .chat-history-item.active {
+        background: #e3f2fd;
+        border-color: #90caf9;
+    }
+    .chat-history-item .session-summary {
+        font-size: 0.85rem;
+        color: #555;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: calc(100% - 30px);
+    }
+    .chat-history-item .session-time {
+        font-size: 0.75rem;
+        color: #999;
+    }
+    .delete-session-btn {
+        position: absolute;
+        right: 8px;
+        top: 8px;
+        padding: 0 4px;
+        font-size: 0.7rem;
+    }
+    .chat-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: #f8f9fa;
+        min-width: 0;
+    }
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1.5rem;
+        scroll-behavior: smooth;
+    }
+    .chat-input-area {
+        padding: 1rem 1.5rem;
+        background: #fff;
+        border-top: 1px solid #e9ecef;
+    }
+    .chat-input-area .input-group textarea {
+        resize: none;
+    }
+    .message {
+        margin-bottom: 1.5rem;
+        display: flex;
+        flex-direction: column;
+    }
+    .message.user { align-items: flex-end; }
+    .message.assistant { align-items: flex-start; }
+    .message-bubble {
+        max-width: 75%;
+        padding: 12px 16px;
+        border-radius: 12px;
+        position: relative;
+        word-wrap: break-word;
+        line-height: 1.6;
+        font-size: 0.95rem;
+    }
+    .message.user .message-bubble {
+        background: #2563eb;
+        color: #fff;
+        border-bottom-right-radius: 4px;
+    }
+    .message.assistant .message-bubble {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-bottom-left-radius: 4px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .message-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 4px;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+    .message:hover .message-actions {
+        opacity: 1;
+    }
+    .thinking-chain {
+        margin-top: 8px;
+        width: 100%;
+    }
+    .thinking-chain details {
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        border-radius: 8px;
+        padding: 8px 12px;
+    }
+    .thinking-chain summary {
+        cursor: pointer;
+        font-weight: 600;
+        color: #92400e;
+        list-style: none;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .thinking-chain details[open] summary {
+        margin-bottom: 8px;
+    }
+    .thinking-step {
+        padding: 8px 0;
+        border-bottom: 1px dashed #fde68a;
+        font-size: 0.85rem;
+    }
+    .thinking-step:last-child { border-bottom: none; }
+    .step-id { font-weight: 600; color: #b45309; }
+    .status-success { color: #16a34a; }
+    .status-failed { color: #dc2626; }
+    .status-pending { color: #f59e0b; }
+    .step-detail {
+        white-space: pre-wrap;
+        font-family: 'Courier New', monospace;
+        font-size: 0.8rem;
+        background: #fff;
+        padding: 4px 8px;
+        margin-top: 4px;
+        border-radius: 4px;
+        max-height: 150px;
+        overflow-y: auto;
+    }
+    .file-download {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-radius: 6px;
+        color: #166534;
+        text-decoration: none;
+        font-size: 0.9rem;
+        margin-top: 8px;
+        transition: background 0.2s;
+    }
+    .file-download:hover {
+        background: #dcfce7;
+        color: #14532d;
+    }
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: #aaa;
+    }
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+    @media (max-width: 768px) {
+        .chat-sidebar { width: 240px; }
+        .message-bubble { max-width: 90%; }
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="chat-wrapper">
+    <!-- 左侧历史记录 -->
+    <div class="chat-sidebar">
+        <div class="chat-sidebar-header">
+            <span class="fw-semibold"><i class="bi bi-chat-left-text"></i> 历史记录</span>
+            <button class="btn btn-sm btn-outline-primary" id="new-session-btn" title="新建会话">
+                <i class="bi bi-plus-lg"></i>
+            </button>
+        </div>
+        <div class="chat-history-list" id="chat-history-list">
+            <!-- 动态加载会话列表 -->
+            <div class="text-muted p-3 text-center">加载中...</div>
+        </div>
+    </div>
+
+    <!-- 右侧对话区 -->
+    <div class="chat-main">
+        <div class="chat-messages" id="chat-messages">
+            <!-- 空状态 -->
+            <div class="empty-state" id="empty-state">
+                <i class="bi bi-robot"></i>
+                <p>输入您的问题，开始数据分析</p>
+                <small class="text-muted">例如：分析上季度各产品线的销售额趋势</small>
+            </div>
+        </div>
+
+        <div class="chat-input-area">
+            <div class="input-group">
+                <textarea class="form-control" id="chat-input" rows="2" placeholder="输入分析需求，按 Enter 发送，Shift+Enter 换行..." aria-label="消息输入"></textarea>
+                <button class="btn btn-primary" type="button" id="chat-send-btn">
+                    <i class="bi bi-send"></i> 发送
+                </button>
+            </div>
+            <div class="mt-1">
+                <small class="text-muted">
+                    <i class="bi bi-info-circle"></i> 支持多轮对话，系统将自动拆解复杂任务并显示思维链
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+{% endblock %}
