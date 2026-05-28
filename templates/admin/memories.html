@@ -1,0 +1,168 @@
+<!-- templates/admin/memories.html -->
+{% extends "base.html" %}
+
+{% block title %}记忆管理 - 企业数据分析智能体{% endblock %}
+
+{% block body %}
+<div class="admin-wrapper">
+    <!-- 左侧边栏 -->
+    <div class="admin-sidebar">
+        <h5 class="px-3 py-2 mb-0 text-white-50">管理菜单</h5>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.settings') }}">
+                    <i class="bi bi-sliders"></i> 系统设置
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.user_list') }}">
+                    <i class="bi bi-people"></i> 用户管理
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.database_settings') }}">
+                    <i class="bi bi-database"></i> 数据库设置
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active" href="{{ url_for('admin.memories') }}">
+                    <i class="bi bi-memory"></i> 记忆管理
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- 右侧内容 -->
+    <div class="admin-content">
+        <h4 class="mb-3"><i class="bi bi-memory"></i> 长期记忆管理</h4>
+        <p class="text-muted">管理所有用户的长期记忆，包括分析框架、术语映射等。可手动添加或删除记忆。</p>
+
+        <!-- 搜索框 -->
+        <form class="row g-2 mb-3" method="GET" action="{{ url_for('admin.memories') }}">
+            <div class="col-auto">
+                <input type="text" class="form-control" name="keyword" placeholder="搜索记忆内容或类型" value="{{ keyword or '' }}">
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-outline-primary">搜索</button>
+            </div>
+            <div class="col-auto">
+                <a href="{{ url_for('admin.memories') }}" class="btn btn-outline-secondary">清除</a>
+            </div>
+        </form>
+
+        <!-- 添加记忆卡片 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="bi bi-plus-circle"></i> 添加新记忆
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('admin.add_memory') }}">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label for="memory-user-id" class="form-label">所属用户</label>
+                            <div class="input-group">
+                                <select class="form-select" id="memory-user-id" name="user_id" required>
+                                    <option value="">-- 选择用户 --</option>
+                                    {% for user in users %}
+                                        <option value="{{ user.id }}"
+                                            {{ 'selected' if user.id == current_user.id }}>
+                                            {{ user.username }} (ID: {{ user.id }}) {{ '(当前)' if user.id == current_user.id }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <button class="btn btn-outline-secondary" type="button" id="fill-current-user">
+                                    填入当前用户
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="memory-type" class="form-label">记忆类型</label>
+                            <select class="form-select" id="memory-type" name="memory_type">
+                                <option value="analysis_framework">分析框架</option>
+                                <option value="term_mapping">术语映射</option>
+                                <option value="user_preference">用户偏好</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label for="memory-content" class="form-label">记忆内容</label>
+                            <textarea class="form-control" id="memory-content" name="content" rows="3" placeholder="例如：高价值客户是消费额>10000且最近购买在30天内的用户" required></textarea>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle"></i> 保存记忆
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 记忆列表 -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-list-ul"></i> 记忆列表</span>
+                <span class="badge bg-primary">{{ memories|length }} 条</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>用户ID</th>
+                                <th>类型</th>
+                                <th>内容预览</th>
+                                <th>创建时间</th>
+                                <th>最后访问</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if memories %}
+                                {% for mem in memories %}
+                                <tr>
+                                    <td>{{ mem.id }}</td>
+                                    <td>{{ mem.user_id }}</td>
+                                    <td>
+                                        <span class="badge bg-info">{{ mem.memory_type }}</span>
+                                    </td>
+                                    <td>{{ (mem.content[:50] + '...') if mem.content and mem.content|length > 50 else mem.content }}</td>
+                                    <td>{{ mem.created_at.strftime('%Y-%m-%d %H:%M') if mem.created_at else '-' }}</td>
+                                    <td>{{ mem.last_accessed.strftime('%Y-%m-%d %H:%M') if mem.last_accessed else '-' }}</td>
+                                    <td>
+                                        <form method="POST" action="{{ url_for('admin.delete_memory', memory_id=mem.id) }}" onsubmit="return confirm('确定要删除这条记忆吗？');">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="bi bi-trash"></i> 删除
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">暂无长期记忆</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('fill-current-user').addEventListener('click', function() {
+        const select = document.getElementById('memory-user-id');
+        const currentUserId = "{{ current_user.id }}";
+        for (let option of select.options) {
+            if (option.value === currentUserId) {
+                select.value = currentUserId;
+                return;
+            }
+        }
+    });
+</script>
+{% endblock %}

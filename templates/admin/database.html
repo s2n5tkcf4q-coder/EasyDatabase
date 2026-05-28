@@ -1,0 +1,290 @@
+<!-- templates/admin/database.html -->
+{% extends "base.html" %}
+
+{% block title %}数据库设置 - 企业数据分析智能体{% endblock %}
+
+{% block body %}
+<div class="admin-wrapper">
+    <!-- 左侧边栏 -->
+    <div class="admin-sidebar">
+        <h5 class="px-3 py-2 mb-0 text-white-50">管理菜单</h5>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.settings') }}">
+                    <i class="bi bi-sliders"></i> 系统设置
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.user_list') }}">
+                    <i class="bi bi-people"></i> 用户管理
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active" href="{{ url_for('admin.database_settings') }}">
+                    <i class="bi bi-database"></i> 数据库设置
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.memories') }}">
+                    <i class="bi bi-memory"></i> 记忆管理
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- 右侧内容 -->
+    <div class="admin-content">
+        <h4 class="mb-3"><i class="bi bi-database"></i> 数据库连接设置</h4>
+        <p class="text-muted">配置外部数据库连接，用于数据分析查询。支持 MySQL、PostgreSQL 和 SQLite。</p>
+
+        <!-- 添加连接按钮 -->
+        <button type="button" class="btn btn-primary mb-3" id="add-connection-btn">
+            <i class="bi bi-plus-circle"></i> 添加连接
+        </button>
+
+        <!-- 连接列表 -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-plug"></i> 连接列表</span>
+                <span class="badge bg-primary">{{ connections|length }} 个连接</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>名称</th>
+                                <th>类型</th>
+                                <th>主机</th>
+                                <th>数据库名</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if connections %}
+                                {% for conn in connections %}
+                                <tr>
+                                    <td>{{ conn.name }}</td>
+                                    <td>
+                                        {% if conn.db_type == 'mysql' %}
+                                            <span class="badge bg-info">MySQL</span>
+                                        {% elif conn.db_type == 'postgresql' %}
+                                            <span class="badge bg-success">PostgreSQL</span>
+                                        {% elif conn.db_type == 'sqlite' %}
+                                            <span class="badge bg-secondary">SQLite</span>
+                                        {% else %}
+                                            <span class="badge bg-dark">{{ conn.db_type }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ conn.host or '-' }}</td>
+                                    <td>{{ conn.database }}</td>
+                                    <td>{{ conn.created_at.strftime('%Y-%m-%d %H:%M') if conn.created_at else '-' }}</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <!-- 测试连接 -->
+                                            <form method="POST" action="{{ url_for('admin.database_settings') }}" style="display:inline;">
+                                                <input type="hidden" name="action" value="test">
+                                                <input type="hidden" name="conn_id" value="{{ conn.id }}">
+                                                <button type="submit" class="btn btn-outline-info" title="测试连接">
+                                                    <i class="bi bi-lightning-charge"></i>
+                                                </button>
+                                            </form>
+                                            <!-- 编辑 -->
+                                            <button type="button" class="btn btn-outline-primary edit-conn-btn"
+                                                    data-id="{{ conn.id }}"
+                                                    data-name="{{ conn.name }}"
+                                                    data-type="{{ conn.db_type }}"
+                                                    data-host="{{ conn.host }}"
+                                                    data-port="{{ conn.port }}"
+                                                    data-database="{{ conn.database }}"
+                                                    data-username="{{ conn.username }}"
+                                                    data-password="{{ conn.password }}"
+                                                    data-extra="{{ conn.extra_params }}"
+                                                    title="编辑">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <!-- 删除 -->
+                                            <form method="POST" action="{{ url_for('admin.database_settings') }}" style="display:inline;" onsubmit="return confirm('确定要删除连接 {{ conn.name }} 吗？此操作不可恢复。');">
+                                                <input type="hidden" name="action" value="delete">
+                                                <input type="hidden" name="conn_id" value="{{ conn.id }}">
+                                                <button type="submit" class="btn btn-outline-danger" title="删除">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                            <!-- 同步元数据 -->
+                                            <form method="POST" action="{{ url_for('admin.database_settings') }}" style="display:inline;">
+                                                <input type="hidden" name="action" value="sync_metadata">
+                                                <input type="hidden" name="conn_id" value="{{ conn.id }}">
+                                                <button type="submit" class="btn btn-outline-success" title="同步元数据">
+                                                    <i class="bi bi-arrow-repeat"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">暂无数据库连接，请点击“添加连接”按钮进行配置。</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 添加/编辑连接模态框 -->
+<div class="modal fade" id="connectionModal" tabindex="-1" aria-labelledby="connectionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('admin.database_settings') }}" id="connection-form">
+                <input type="hidden" name="action" id="conn-action" value="add">
+                <input type="hidden" name="conn_id" id="conn-id" value="">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="connectionModalLabel">添加数据库连接</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">连接名称 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="name" id="modal-name" placeholder="如：生产数据库" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">数据库类型 <span class="text-danger">*</span></label>
+                            <select class="form-select" name="db_type" id="modal-type">
+                                <option value="mysql">MySQL</option>
+                                <option value="postgresql">PostgreSQL</option>
+                                <option value="sqlite">SQLite</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6" id="host-group">
+                            <label class="form-label">主机</label>
+                            <input type="text" class="form-control" name="host" id="modal-host" placeholder="localhost">
+                        </div>
+                        <div class="col-md-3" id="port-group">
+                            <label class="form-label">端口</label>
+                            <input type="number" class="form-control" name="port" id="modal-port" placeholder="3306">
+                        </div>
+                        <div class="col-md-3" id="file-group" style="display:none;">
+                            <label class="form-label">数据库文件路径</label>
+                            <input type="text" class="form-control" name="database_file" id="modal-database-file" placeholder="data.db">
+                        </div>
+                        <div class="col-md-6" id="database-name-group">
+                            <label class="form-label">数据库名 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="database" id="modal-database" placeholder="mydb" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">用户名</label>
+                            <input type="text" class="form-control" name="username" id="modal-username" placeholder="root">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">密码</label>
+                            <input type="password" class="form-control" name="password" id="modal-password" placeholder="密码">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">额外参数 (JSON)</label>
+                            <input type="text" class="form-control" name="extra_params" id="modal-extra" placeholder='{"charset": "utf8mb4"}'>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // 数据库类型切换时显示/隐藏主机端口和文件路径字段
+    const typeSelect = document.getElementById('modal-type');
+    const hostGroup = document.getElementById('host-group');
+    const portGroup = document.getElementById('port-group');
+    const fileGroup = document.getElementById('file-group');
+    const databaseNameGroup = document.getElementById('database-name-group');
+
+    function toggleFields() {
+        const dbType = typeSelect.value;
+        if (dbType === 'sqlite') {
+            hostGroup.style.display = 'none';
+            portGroup.style.display = 'none';
+            fileGroup.style.display = 'block';
+            databaseNameGroup.querySelector('label').innerHTML = '数据库名 <span class="text-danger">*</span>';
+            databaseNameGroup.querySelector('input').placeholder = '数据文件路径';
+        } else {
+            hostGroup.style.display = 'block';
+            portGroup.style.display = 'block';
+            fileGroup.style.display = 'none';
+            databaseNameGroup.querySelector('label').innerHTML = '数据库名 <span class="text-danger">*</span>';
+            databaseNameGroup.querySelector('input').placeholder = 'mydb';
+        }
+    }
+
+    typeSelect.addEventListener('change', toggleFields);
+
+    // 添加按钮：清空表单，设置为添加模式
+    document.getElementById('add-connection-btn').addEventListener('click', function() {
+        document.getElementById('conn-action').value = 'add';
+        document.getElementById('conn-id').value = '';
+        document.getElementById('modal-name').value = '';
+        document.getElementById('modal-type').value = 'mysql';
+        document.getElementById('modal-host').value = '';
+        document.getElementById('modal-port').value = '3306';
+        document.getElementById('modal-database').value = '';
+        document.getElementById('modal-database-file').value = '';
+        document.getElementById('modal-username').value = '';
+        document.getElementById('modal-password').value = '';
+        document.getElementById('modal-extra').value = '';
+        toggleFields(); // 重置显示
+        document.getElementById('connectionModalLabel').textContent = '添加数据库连接';
+        var modal = new bootstrap.Modal(document.getElementById('connectionModal'));
+        modal.show();
+    });
+
+    // 编辑按钮：填充数据
+    document.querySelectorAll('.edit-conn-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = this.dataset.id;
+            const name = this.dataset.name;
+            const type = this.dataset.type;
+            const host = this.dataset.host || '';
+            const port = this.dataset.port || '';
+            const database = this.dataset.database || '';
+            const username = this.dataset.username || '';
+            const password = this.dataset.password || '';
+            const extra = this.dataset.extra || '';
+
+            document.getElementById('conn-action').value = 'edit';
+            document.getElementById('conn-id').value = id;
+            document.getElementById('modal-name').value = name;
+            document.getElementById('modal-type').value = type;
+            document.getElementById('modal-host').value = host;
+            document.getElementById('modal-port').value = port;
+            document.getElementById('modal-database').value = database;
+            // 对于 SQLite，也把 database 填入文件字段（如果需要）
+            document.getElementById('modal-database-file').value = (type === 'sqlite') ? database : '';
+            document.getElementById('modal-username').value = username;
+            document.getElementById('modal-password').value = password;
+            document.getElementById('modal-extra').value = extra;
+            toggleFields(); // 根据类型调整
+            document.getElementById('connectionModalLabel').textContent = '编辑数据库连接 - ' + name;
+
+            var modal = new bootstrap.Modal(document.getElementById('connectionModal'));
+            modal.show();
+        });
+    });
+
+    // 删除确认（已在表单 onsubmit 中处理）
+
+    // 页面加载时触发一次字段显示调整（如果有默认值）
+    toggleFields();
+</script>
+{% endblock %}

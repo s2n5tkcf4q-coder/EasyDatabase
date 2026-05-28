@@ -1,0 +1,246 @@
+<!-- templates/admin/settings.html -->
+{% extends "base.html" %}
+
+{% block title %}系统设置 - 企业数据分析智能体{% endblock %}
+
+{% block extra_css %}
+<style>
+    .config-section {
+        margin-bottom: 1.5rem;
+    }
+    .mode-config {
+        display: none;
+    }
+    .mode-config.active {
+        display: block;
+    }
+    .form-range-labels {
+        display: flex;
+        justify-content: space-between;
+    }
+    .btn-test {
+        margin-left: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="admin-wrapper">
+    <!-- 左侧边栏 -->
+    <div class="admin-sidebar">
+        <h5 class="px-3 py-2 mb-0 text-white-50">管理菜单</h5>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link active" href="{{ url_for('admin.settings') }}">
+                    <i class="bi bi-sliders"></i> 系统设置
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.user_list') }}">
+                    <i class="bi bi-people"></i> 用户管理
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.database_settings') }}">
+                    <i class="bi bi-database"></i> 数据库设置
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.memories') }}">
+                    <i class="bi bi-memory"></i> 记忆管理
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- 右侧内容 -->
+    <div class="admin-content">
+        <h4 class="mb-4"><i class="bi bi-sliders"></i> 系统设置</h4>
+        <p class="text-muted">配置大模型连接及生成参数，修改后需点击“保存设置”。</p>
+
+        <form method="POST" action="{{ url_for('admin.settings') }}" id="settings-form">
+            <!-- 隐藏字段区分动作 -->
+            <input type="hidden" name="action" id="form-action" value="save">
+
+            <!-- LLM 模式选择 -->
+            <div class="config-section card p-4">
+                <h5>LLM 模式</h5>
+                <div class="btn-group" role="group">
+                    <input type="radio" class="btn-check" name="llm_mode" id="mode-api" value="api"
+                           {{ 'checked' if config.llm_mode == 'api' }}>
+                    <label class="btn btn-outline-primary" for="mode-api">API 模式</label>
+
+                    <input type="radio" class="btn-check" name="llm_mode" id="mode-ollama" value="ollama"
+                           {{ 'checked' if config.llm_mode == 'ollama' }}>
+                    <label class="btn btn-outline-primary" for="mode-ollama">Ollama 本地</label>
+                </div>
+            </div>
+
+            <!-- API 配置块 -->
+            <div class="config-section card p-4 mode-config {{ 'active' if config.llm_mode == 'api' }}" id="api-config">
+                <h5>API 配置</h5>
+                <div class="mb-3">
+                    <label class="form-label">API 地址</label>
+                    <input type="url" class="form-control" name="api_url" value="{{ config.api_url }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">API Key</label>
+                    <input type="password" class="form-control" name="api_key" value="{{ config.api_key }}">
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Chat 模型</label>
+                        <input type="text" class="form-control" name="api_chat_model" value="{{ config.api_chat_model }}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Embedding 模型</label>
+                        <input type="text" class="form-control" name="api_embedding_model" value="{{ config.api_embedding_model }}">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ollama 配置块 -->
+            <div class="config-section card p-4 mode-config {{ 'active' if config.llm_mode == 'ollama' }}" id="ollama-config">
+                <h5>Ollama 配置</h5>
+                <div class="mb-3">
+                    <label class="form-label">Base URL</label>
+                    <input type="url" class="form-control" name="ollama_base_url" value="{{ config.ollama_base_url }}">
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Chat 模型</label>
+                        <input type="text" class="form-control" name="ollama_chat_model" value="{{ config.ollama_chat_model }}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Embedding 模型</label>
+                        <input type="text" class="form-control" name="ollama_embedding_model" value="{{ config.ollama_embedding_model }}">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 系统提示词 -->
+            <div class="config-section card p-4">
+                <h5>系统提示词</h5>
+                <textarea class="form-control" name="system_prompt" rows="4">{{ config.system_prompt }}</textarea>
+            </div>
+
+            <!-- 生成参数 -->
+            <div class="config-section card p-4">
+                <h5>生成参数</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">温度 (Temperature)</label>
+                        <input type="range" class="form-range" min="0" max="2" step="0.1" name="temperature"
+                               value="{{ config.temperature }}" oninput="this.nextElementSibling.value = this.value">
+                        <output>{{ config.temperature }}</output>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Top P</label>
+                        <input type="range" class="form-range" min="0" max="1" step="0.05" name="top_p"
+                               value="{{ config.top_p }}" oninput="this.nextElementSibling.value = this.value">
+                        <output>{{ config.top_p }}</output>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">存在惩罚 (Presence Penalty)</label>
+                        <input type="range" class="form-range" min="-2" max="2" step="0.1" name="presence_penalty"
+                               value="{{ config.presence_penalty }}" oninput="this.nextElementSibling.value = this.value">
+                        <output>{{ config.presence_penalty }}</output>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">频率惩罚 (Frequency Penalty)</label>
+                        <input type="range" class="form-range" min="-2" max="2" step="0.1" name="frequency_penalty"
+                               value="{{ config.frequency_penalty }}" oninput="this.nextElementSibling.value = this.value">
+                        <output>{{ config.frequency_penalty }}</output>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">最大 Token 数</label>
+                        <input type="number" class="form-control" name="max_tokens" value="{{ config.max_tokens }}" min="100" max="16384">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 记忆与检索参数 -->
+            <div class="config-section card p-4">
+                <h5>记忆与检索</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">相似度阈值</label>
+                        <input type="number" class="form-control" name="similarity_threshold" value="{{ config.similarity_threshold }}" step="0.01" min="0" max="1">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">向量相似度权重</label>
+                        <input type="number" class="form-control" name="similarity_weight" value="{{ config.similarity_weight }}" step="0.1" min="0" max="1">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Top N 记忆</label>
+                        <input type="number" class="form-control" name="top_n" value="{{ config.top_n }}" min="1" max="20">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">短期记忆轮数</label>
+                        <input type="number" class="form-control" name="short_term_rounds" value="{{ config.short_term_rounds }}" min="1" max="50">
+                    </div>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" name="enable_long_term" id="enable-long-term"
+                           {{ 'checked' if config.enable_long_term }}>
+                    <label class="form-check-label" for="enable-long-term">启用长期记忆</label>
+                </div>
+            </div>
+
+            <!-- 按钮组 -->
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary" id="save-btn">
+                    <i class="bi bi-check-circle"></i> 保存设置
+                </button>
+                <button type="submit" class="btn btn-outline-info" id="test-btn">
+                    <i class="bi bi-plug"></i> 测试连接
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // 根据 LLM 模式显示/隐藏配置块
+    const modeRadios = document.querySelectorAll('input[name="llm_mode"]');
+    const apiConfig = document.getElementById('api-config');
+    const ollamaConfig = document.getElementById('ollama-config');
+    const formAction = document.getElementById('form-action');
+
+    function toggleMode() {
+        const mode = document.querySelector('input[name="llm_mode"]:checked').value;
+        apiConfig.classList.toggle('active', mode === 'api');
+        ollamaConfig.classList.toggle('active', mode === 'ollama');
+    }
+
+    modeRadios.forEach(radio => radio.addEventListener('change', toggleMode));
+
+    // 测试连接按钮点击时，修改表单动作标识
+    document.getElementById('test-btn').addEventListener('click', function(e) {
+        e.preventDefault();
+        formAction.value = 'test_connection';  // 后端根据 action 字段判断
+        // 提交表单
+        document.getElementById('settings-form').submit();
+    });
+
+    // 保存按钮点击时，确保 action 为 save
+    document.getElementById('save-btn').addEventListener('click', function(e) {
+        formAction.value = 'save';
+    });
+
+    // 滑块输出实时更新
+    document.querySelectorAll('input[type="range"]').forEach(slider => {
+        slider.addEventListener('input', function() {
+            this.nextElementSibling.value = this.value;
+        });
+    });
+</script>
+{% endblock %}
