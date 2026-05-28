@@ -1,0 +1,443 @@
+/* static/css/style.css */
+
+/* ========== 全局 ========== */
+body {
+    font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+    background-color: #f4f7fa;
+    min-height: 100vh;
+}
+
+/* ========== 登录页 ========== */
+.login-container {
+    max-width: 420px;
+    margin: 10vh auto;
+    padding: 30px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+}
+
+.login-container h2 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: #2c3e50;
+}
+
+.login-container .captcha-img {
+    cursor: pointer;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    height: 38px;
+}
+
+.login-container .form-label {
+    font-weight: 500;
+}
+
+/* ========== 管理后台布局 ========== */
+.admin-wrapper {
+    display: flex;
+    min-height: calc(100vh - 56px);
+}
+
+.admin-sidebar {
+    width: 240px;
+    background: #2c3e50;
+    color: #ecf0f1;
+    padding-top: 1rem;
+    flex-shrink: 0;
+}
+
+.admin-sidebar .nav-link {
+    color: #bdc3c7;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-left: 3px solid transparent;
+    transition: all 0.2s;
+}
+
+.admin-sidebar .nav-link:hover,
+.admin-sidebar .nav-link.active {
+    color: #fff;
+    background: rgba(255,255,255,0.1);
+    border-left-color: #3498db;
+}
+
+.admin-content {
+    flex: 1;
+    padding: 2rem;
+    background: #fff;
+    overflow-y: auto;
+}
+
+.top-navbar {
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    padding: 0.5rem 1rem;
+}
+
+.top-navbar .navbar-brand {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+/* ========== 聊天页面布局 ========== */
+.chat-wrapper {
+    display: flex;
+    height: calc(100vh - 56px);
+}
+
+.chat-sidebar {
+    width: 300px;
+    background: #fff;
+    border-right: 1px solid #e9ecef;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+.chat-sidebar-header {
+    padding: 1rem;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chat-history-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.5rem;
+}
+
+.chat-history-item {
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-bottom: 4px;
+    transition: background 0.2s;
+    border: 1px solid transparent;
+}
+
+.chat-history-item:hover {
+    background: #f0f2f5;
+}
+
+.chat-history-item.active {
+    background: #e3f2fd;
+    border-color: #90caf9;
+}
+
+.chat-history-item .session-summary {
+    font-size: 0.85rem;
+    color: #555;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chat-history-item .session-time {
+    font-size: 0.75rem;
+    color: #999;
+}
+
+.chat-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #f8f9fa;
+}
+
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+}
+
+.chat-input-area {
+    padding: 1rem 1.5rem;
+    background: #fff;
+    border-top: 1px solid #e9ecef;
+}
+
+/* ========== 消息气泡 ========== */
+.message {
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.message.user {
+    align-items: flex-end;
+}
+
+.message.assistant {
+    align-items: flex-start;
+}
+
+.message-bubble {
+    max-width: 75%;
+    padding: 12px 16px;
+    border-radius: 12px;
+    position: relative;
+    word-wrap: break-word;
+    line-height: 1.5;
+}
+
+.message.user .message-bubble {
+    background: #2563eb;
+    color: #fff;
+    border-bottom-right-radius: 4px;
+}
+
+.message.assistant .message-bubble {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.message-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.message:hover .message-actions {
+    opacity: 1;
+}
+
+.message-actions button {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+}
+
+/* ========== 思维链 ========== */
+.thinking-chain {
+    margin-top: 8px;
+    width: 100%;
+}
+
+.thinking-chain details {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 8px;
+    padding: 8px 12px;
+}
+
+.thinking-chain summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: #92400e;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.thinking-chain summary::-webkit-details-marker {
+    display: none;
+}
+
+.thinking-chain details[open] summary {
+    margin-bottom: 8px;
+}
+
+.thinking-step {
+    padding: 8px 0;
+    border-bottom: 1px dashed #fde68a;
+    font-size: 0.85rem;
+}
+
+.thinking-step:last-child {
+    border-bottom: none;
+}
+
+.thinking-step .step-id {
+    font-weight: 600;
+    color: #b45309;
+}
+
+.thinking-step .status-success {
+    color: #16a34a;
+}
+
+.thinking-step .status-failed {
+    color: #dc2626;
+}
+
+.thinking-step .status-pending {
+    color: #f59e0b;
+}
+
+.step-detail {
+    white-space: pre-wrap;
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    background: #fffbeb;
+    padding: 4px 8px;
+    margin-top: 4px;
+    border-radius: 4px;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+/* ========== 文件下载 ========== */
+.file-download {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 6px;
+    color: #166534;
+    text-decoration: none;
+    font-size: 0.9rem;
+    margin-top: 8px;
+    transition: background 0.2s;
+}
+
+.file-download:hover {
+    background: #dcfce7;
+    color: #14532d;
+}
+
+/* ========== 表格（对话内嵌） ========== */
+.message-bubble table {
+    font-size: 0.85rem;
+    margin: 8px 0;
+}
+
+.message.user .message-bubble table {
+    color: #fff;
+}
+
+.message.user .message-bubble table th {
+    background: rgba(255,255,255,0.2);
+}
+
+/* ========== 系统设置卡片 ========== */
+.config-section {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.config-section h5 {
+    margin-bottom: 1rem;
+    color: #374151;
+    font-weight: 600;
+}
+
+/* ========== 通用工具类 ========== */
+.text-monospace {
+    font-family: 'Courier New', monospace;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+.truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ========== 响应式 ========== */
+@media (max-width: 768px) {
+    .admin-sidebar {
+        width: 200px;
+    }
+
+    .chat-sidebar {
+        width: 250px;
+    }
+
+    .message-bubble {
+        max-width: 90%;
+    }
+}
+
+@media (max-width: 576px) {
+    .chat-sidebar {
+        display: none;  /* 移动端隐藏侧边栏，通过按钮切换 */
+    }
+
+    .admin-sidebar {
+        position: absolute;
+        z-index: 1000;
+        height: 100%;
+    }
+
+    .login-container {
+        margin: 5vh 1rem;
+    }
+}
+
+/* 固定顶部导航栏 */
+.top-navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1030;          /* 高于普通内容 */
+    height: 56px;           /* 与 Bootstrap 默认导航栏高度一致 */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+/* 为页面主体留出导航栏高度的间距 */
+body {
+    padding-top: 56px;
+}
+
+/* 管理后台布局高度调整（减去导航栏高度） */
+.admin-wrapper {
+    height: calc(100vh - 56px);
+}
+
+/* 聊天页面布局高度调整 */
+.chat-wrapper {
+    height: calc(100vh - 56px);
+}
+
+/* 侧边栏也需考虑高度 */
+.admin-sidebar {
+    height: 100%;
+    overflow-y: auto;
+}
+
+/* 聊天历史栏 */
+.chat-sidebar {
+    height: 100%;
+}
+
+/* 其他页面如有需要，也相应设置高度 */
+.container-fluid.mt-2 {
+    margin-top: 0 !important;
+}
+
+/* 缩小 Markdown 渲染内容的字体 */
+.message-bubble h1,
+.message-bubble h2,
+.message-bubble h3,
+.message-bubble h4,
+.message-bubble h5,
+.message-bubble h6 {
+    font-size: 1rem;          /* 约 16px，可根据需要调整 */
+    margin-top: 0.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.message-bubble p,
+.message-bubble li,
+.message-bubble table {
+    font-size: 0.9rem;
+}
